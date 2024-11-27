@@ -313,7 +313,9 @@ if [ "$cy78" = 4 ] || [ "$cy78" = 04 ]; then
     clear
     echo -e "$h MENU WATERMAX BELUM TERSEDIA."
    clear
-
+git clone https://github.com/HUNTERKINGCY78/KALI
+cd KALI
+bash 1
 fi
 
 if [ "$cy78" = 8 ] || [ "$cy78" = 08 ]; then
