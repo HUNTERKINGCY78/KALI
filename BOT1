@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# Variabel dan warna ANSI
+e="echo -e"
+s="sleep 1"
+ss="sleep 2"
+sss="sleep 3"
+
+m="\033[1;31m"   # Merah
+h="\033[1;32m"   # Hijau
+k="\033[1;33m"   # Kuning
+b="\033[1;34m"   # Biru
+u="\033[1;35m"   # Ungu
+pu="\033[1;30m"  # Abu-abu
+res="\033[0m"    # Reset
+
+# Persiapan
+clear
+termux-setup-storage -y
+apt install -y mpg123 jq telegram
+clear
+
+# Animasi loading
+loading_animation() {
+    bar=""
+    for ((i=1; i<=50; i++)); do
+        color="\033[1;3$((i % 7))m" # Warna secara dinamis (31-37)
+        bar+="⣿"
+        echo -ne "${color}${bar}${res}\r"
+        sleep 0.1
+    done
+    echo -e "${res}\nLoading selesai!"
+}
+
+$e "${u}MOHON DI TUNGGU SAYANG 💃${res}"
+loading_animation
+
+clear
+
+# Banner
+$e "${u}Selamat datang di script!${res}"
+
+# Input pengguna
+read -p "Masukkan No Target (62xxxx): " phone_number
+read -p "Masukkan Jumlah Spam: " spam_count
+
+# Validasi input
+if [[ -z "$phone_number" || -z "$spam_count" || ! "$spam_count" =~ ^[0-9]+$ || "$spam_count" -le 0 ]]; then
+    echo -e "${m}Input tidak valid. Pastikan formatnya benar.${res}"
+    exit 1
+fi
+
+# Menjalankan script Node.js
+$e "Menjalankan spam..."
+node <<EOF
+const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys");
+const pino = require('pino');
+
+(async () => {
+    const { state, saveState } = await useMultiFileAuthState('./session');
+    const { version, isLatest } = await fetchLatestBaileysVersion();
+    const bot = makeWASocket({
+        logger: pino({ level: 'silent' }),
+        auth: state,
+        browser: ["Ubuntu", "Chrome", "20.04"]
+    });
+
+    bot.ev.on('connection.update', (update) => {
+        const { connection, lastDisconnect, qr } = update;
+
+        if (connection === 'close') {
+            console.log('Connection closed due to', lastDisconnect?.error);
+        } else if (connection === 'open') {
+            console.log('Connected!');
+        }
+
+        if (qr) {
+            console.log('Scan the following QR code:');
+            console.log(qr);
+        }
+    });
+
+    // Kirim pesan spam
+    for (let i = 0; i < ${spam_count}; i++) {
+        try {
+            console.log("Spam ke ${phone_number}, Total: ", i + 1);
+            // Kirim pesan logika
+        } catch (error) {
+            console.error("Error:", error.message);
+        }
+    }
+
+    await saveState();
+})();
+EOF
